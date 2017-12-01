@@ -215,4 +215,55 @@ void blinkLeds(bool shouldBlink)
   }
 }
 
+int getValue()
+{
+  Serial.setTimeout(10);
+  int value = 0;
+  while (Serial.available() <= 0)
+  {
+    //Wait
+  }
+
+  value = Serial.parseInt();
+
+  return value;
+}
+
+void alarmControl()
+{
+  Serial.setTimeout(10);
+  int shouldAlarm = 0;
+  enum {WAITING, ALARMING};
+  static int state = ALARMING;
+
+  shouldAlarm = getValue();
+
+  switch (state)
+  {
+    case WAITING:
+      if (shouldAlarm > 0)
+      {
+        state = ALARMING;
+      }
+    break;
+
+    case ALARMING:
+      if (shouldAlarm <= 0)
+      {
+        playAlert(false);
+        blinkLeds(false);
+        state = WAITING;
+      } else 
+      {
+        playAlert(true);
+        blinkLeds(true);
+      }
+    break;
+
+    default:
+      Serial.println("error");
+    break;
+  }
+}
+
 
