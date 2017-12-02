@@ -87,7 +87,7 @@ void setup()
 
 void loop() 
 {
-   
+   control();
 }
 
 void control()
@@ -107,6 +107,7 @@ void control()
       }
       if (checkStoveOn() && intervalTimer.done())
       {
+        espSerial.print(1); //Tells other arduino to play Alarm
         state = ALARMING;
       }
     break;
@@ -116,6 +117,7 @@ void control()
       {
         playAlert(false);
         blinkLeds(false);
+        espSerial.print(1); //Tells other arduino to stop Alarming
         state = CHECKING;
       } else
       {
@@ -253,18 +255,6 @@ void blinkLeds(bool shouldBlink)
   }
 }
 
-int getValue()
-{
-  Serial.setTimeout(10);
-  int value = 0;
-  if (espSerial.available() > 0)
-  {
-    value = espSerial.parseInt();
-  }
-
-  return value;
-}
-
 void alarmControl()
 {
   Serial.setTimeout(10);
@@ -300,6 +290,18 @@ void alarmControl()
       Serial.println("error");
     break;
   }
+}
+
+int getValue()
+{
+  Serial.setTimeout(10);
+  int value = 0;
+  if (espSerial.available() > 0)
+  {
+    value = espSerial.parseInt();
+  }
+
+  return value;
 }
 
 void setupEsp_AP_TelnetServer()
