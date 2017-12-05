@@ -12,8 +12,8 @@
 Wiring:
 1.VCC to 5V on Arduino board
 2.  GND to GND on Arduino board
-3.  REC to Pin 11 on Arduino board
-4.  P-E to Pin 13 on Arduino board
+3.  REC to Pin 9 on Arduino board
+4.  P-E to Pin 8 on Arduino board
 */
 
 #include <CPE123_Fall17.h>
@@ -22,15 +22,19 @@ Wiring:
 //Define Pins
 const int flameSensorPin = 7;
 
-const int Rec = 53;
-const int Play = 51;
+const int Rec = 9;
+const int Play = 8;
 
-const int buttonPin = 4;
+const int buttonPin = 3;
 
 const int ledPin44 = 44;
 
-const int ledPin46 = 46;
-const int ledPin48 = 48;
+const int ledPin12 = 12;
+const int ledPin11 = 11;
+
+const int inputPin = 10;
+
+const int ledPin = 4;
 
 // Pins - also assumes using Serial1 to talk with ESP board
 const int espResetPin = 53;
@@ -43,21 +47,21 @@ Led ledOne(ledPin44);
 
 Button overideButton(buttonPin);
 
-Led bluLed(ledPin46);
-Led redLed(ledPin48);
+Led bluLed(ledPin12);
+Led redLed(ledPin11);
 
 Led boardLed(boardLedPin);
 Led connectedLed(connectedLedPin);
 Led tcpLed(tcpLedPin);
 
-// Used to setup the ESP as an Access Point.
+//Used to setup the ESP as an Access Point.
 const char apSSID[] = "FlameOn";
 const char apWifiPassword[] = "fourwordsalluppercase";
 
-// Used to setup the ESP as a telnet server (port 23)
+//Used to setup the ESP as a telnet server (port 23)
 const unsigned int tcpServerPort = 23; // telnet
 
-// Used to communicate between the Mega and the ESP device
+//Used to communicate between the Mega and the ESP device
 HardwareSerial & espSerial = Serial3;
 
 void setup() 
@@ -71,10 +75,18 @@ void setup()
   pinMode(Rec, OUTPUT);
   pinMode(Play, OUTPUT);
 
+  pinMode(inputPin, INPUT);
+
   bluLed.off();
   redLed.off();
 
-  // setup esp, AP and telnet server
+  wifiSetup();
+
+}
+
+void wifiSetup()
+{
+  //  setup esp, AP and telnet server
   setupEsp_AP_TelnetServer();
   
   //  Put esp into serial mode (mega send/recv over network use espSerial)
@@ -95,7 +107,7 @@ void control()
   enum {CHECKING, ALARMING};
   static int state = CHECKING;
   
-  const int intervalTime = 10000;
+  const int intervalTime = 2000;
   static MSTimer intervalTimer(intervalTime);
 
   switch(state)
@@ -113,7 +125,7 @@ void control()
     break;
 
     case ALARMING:
-      if (overideButton.wasPushed() || checkForMovement())
+      if (overideButton.wasPushed())
       {
         playAlert(false);
         blinkLeds(false);
@@ -165,12 +177,25 @@ bool checkGasOn()
 
 bool checkForMovement()
 {
-  bool returnValue = false;
-
-  //Place holder
-  //If movement, return true
-
-  return returnValue;
+  static int sensorState = 0;
+  int value = digitalRead(inputPin);  
+  if (value == HIGH) {            
+    digitalWrite(ledPin, HIGH);  // turn LED ON
+    if (sensorState == LOW) {
+      // we have just turned on
+      Serial.println("Motion detected!");
+      // We only want to print on the output change, not state
+      sensorState = HIGH;
+    }
+  } else {
+    digitalWrite(ledPin, LOW); // turn LED OFF
+    if (sensorState == HIGH){
+      Serial.println("Motion ended!");
+      sensorState = LOW;
+    }
+  }
+  //Serial.println(sensorState);
+  return sensorState;
 }
 
 void playAlert(bool shouldPlay)
@@ -296,9 +321,9 @@ int getValue()
 {
   Serial.setTimeout(10);
   int value = 0;
-  if (espSerial.available() > 0)
+  if (Serial.available() > 0)
   {
-    value = espSerial.parseInt();
+    value = Serial.parseInt();
   }
 
   return value;
