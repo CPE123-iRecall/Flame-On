@@ -20,27 +20,27 @@ Wiring:
 #include "CPE123_EspAPI_Fall17.h"
 
 //Define Pins
-const int flameSensorPin = 7;
+const int flameSensorPin = A0;
 
 const int Rec = 9;
-const int Play = 8;
+const int Play = A15;
 
-const int buttonPin = 3;
+const int buttonPin = A8;
 
 const int ledPin44 = 44;
 
-const int ledPin12 = 12;
-const int ledPin11 = 11;
+const int ledPin12 = A7;
+const int ledPin11 = A5;
 
-const int inputPin = 10;
+const int inputPin = A2;
 
-const int ledPin = 4;
+const int ledPin = A3;
 
 // Pins - also assumes using Serial1 to talk with ESP board
-const int espResetPin = 53;
-const int boardLedPin = 42;
-const int connectedLedPin = 40;
-const int tcpLedPin = 38;
+//const int espResetPin = 53;
+//const int boardLedPin = 42;
+//const int connectedLedPin = 40;
+//const int tcpLedPin = 38;
 
 //Hardware
 Led ledOne(ledPin44);
@@ -50,24 +50,26 @@ Button overideButton(buttonPin);
 Led bluLed(ledPin12);
 Led redLed(ledPin11);
 
-Led boardLed(boardLedPin);
-Led connectedLed(connectedLedPin);
-Led tcpLed(tcpLedPin);
+//// Define your hardware
+//Led boardLed(boardLedPin);
+//Led connectedLed(connectedLedPin);
+//Led tcpLed(tcpLedPin);
 
 //Used to setup the ESP as an Access Point.
-const char apSSID[] = "FlameOn";
-const char apWifiPassword[] = "fourwordsalluppercase";
+//const char apSSID[] = "FlameOn";
+//const char apWifiPassword[] = "fourwordsalluppercase";
 
 //Used to setup the ESP as a telnet server (port 23)
-const unsigned int tcpServerPort = 23; // telnet
+//const unsigned int tcpServerPort = 23; // telnet
 
 //Used to communicate between the Mega and the ESP device
-HardwareSerial & espSerial = Serial3;
+//HardwareSerial & espSerial = Serial3;
 
 void setup() 
 {
   // Setup serial monitor
   Serial.begin(9600);
+   Serial3.begin(9600);
   setupMessage(__FILE__, "Flame On Version 1.0");
 
   pinMode(flameSensorPin, INPUT);
@@ -80,26 +82,35 @@ void setup()
   bluLed.off();
   redLed.off();
 
-  wifiSetup();
+  //wifiSetup();
 
-}
+  blinkLeds(false);
 
-void wifiSetup()
-{
-  //  setup esp, AP and telnet server
-  setupEsp_AP_TelnetServer();
-  
-  //  Put esp into serial mode (mega send/recv over network use espSerial)
-  setupSerialTextMode();
-  
-  // just to make things faster - makes waiting on esp/Serial monitor input faster
-  espSerial.setTimeout(500);
+  Serial3.setTimeout(500);
   Serial.setTimeout(10);
+
 }
+
+//void wifiSetup()
+//{
+//  //  setup esp, AP and telnet server
+//  setupEsp_AP_TelnetServer();
+//  
+//  //  Put esp into serial mode (mega send/recv over network use espSerial)
+//  setupSerialTextMode();
+//  
+//  // just to make things faster - makes waiting on esp/Serial monitor input faster
+//  espSerial.setTimeout(500);
+//  Serial.setTimeout(10);
+//}
 
 void loop() 
 {
    control();
+//   delay(2000);
+//   Serial3.print(1);
+   //playAlert(true);
+   //checkStoveOn();
 }
 
 void control()
@@ -107,7 +118,7 @@ void control()
   enum {CHECKING, ALARMING};
   static int state = CHECKING;
   
-  const int intervalTime = 2000;
+  const int intervalTime = 10000;
   static MSTimer intervalTimer(intervalTime);
 
   switch(state)
@@ -115,11 +126,13 @@ void control()
     case CHECKING:
       if (checkForMovement() == true)
       {
+        Serial.println("movement");
         intervalTimer.set(intervalTime);
       }
       if (checkStoveOn() && intervalTimer.done())
       {
-        espSerial.print(1); //Tells other arduino to play Alarm
+        Serial.println("switch to alarm");
+        Serial3.print(1); //Tells other arduino to play Alarm
         state = ALARMING;
       }
     break;
@@ -129,7 +142,7 @@ void control()
       {
         playAlert(false);
         blinkLeds(false);
-        espSerial.print(1); //Tells other arduino to stop Alarming
+        Serial3.print(1); //Tells other arduino to stop Alarming
         state = CHECKING;
       } else
       {
@@ -321,33 +334,33 @@ int getValue()
 {
   Serial.setTimeout(10);
   int value = 0;
-  if (Serial.available() > 0)
+  if (Serial3.available() > 0)
   {
-    value = Serial.parseInt();
+    value = Serial3.parseInt();
   }
 
   return value;
 }
 
-void setupEsp_AP_TelnetServer()
-{
-  espSerial.begin(9600);
-  
-  // configure the Esp board
-  setupEspLeds(boardLed, connectedLed, tcpLed, espResetPin);
-  espBoardReset("Rebooting ESP board via reset pin"); 
-    
-  // Output ESP Firmware version (helps us verify the boards is working)
-  reportEspFirmwareVersion();
-    
-  // Set up Esp in Access Point mode 
-  setupWifiApMode(apSSID, apWifiPassword);
-  print4("WiFi AP Mode setup complete SSID: ", apSSID, " Password: ", apWifiPassword);
-  
-  // Now setup the TCP server and wait (block) for a client
-  tcpServerSetup(tcpServerPort, "Prof. Smith's Access Point/Telnet test");
-  tcpServerWaitForClient();
-  
-}
+//void setupEsp_AP_TelnetServer()
+//{
+//  espSerial.begin(9600);
+//  
+//  // configure the Esp board
+//  setupEspLeds(boardLed, connectedLed, tcpLed, espResetPin);
+//  espBoardReset("Rebooting ESP board via reset pin"); 
+//    
+//  // Output ESP Firmware version (helps us verify the boards is working)
+//  reportEspFirmwareVersion();
+//    
+//  // Set up Esp in Access Point mode 
+//  setupWifiApMode(apSSID, apWifiPassword);
+//  print4("WiFi AP Mode setup complete SSID: ", apSSID, " Password: ", apWifiPassword);
+//  
+//  // Now setup the TCP server and wait (block) for a client
+//  tcpServerSetup(tcpServerPort, "Prof. Smith's Access Point/Telnet test");
+//  tcpServerWaitForClient();
+//  
+//}
 
 
