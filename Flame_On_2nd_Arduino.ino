@@ -7,19 +7,21 @@
 #include "CPE123_EspAPI_Fall17.h"
 
 // Pins - also assumes using Serial1 to talk with ESP board
-const int espResetPin = 53;
+const int espResetPin = 7;
 const int boardLedPin = 42;
 const int connectedLedPin = 40;
 const int tcpLedPin = 38;
 
 
-const int Rec = 53;
-const int Play = 51;
+
+const int Rec = 9;
+const int Play = 8;
 
 const int ledPin44 = 44;
 
-const int ledPin46 = 46;
-const int ledPin48 = 48;
+
+const int ledPin12 = 12;
+const int ledPin11 = 11;
 
 // ESP8266 Leds
 Led boardLed(boardLedPin);
@@ -35,8 +37,8 @@ const unsigned int tcpPort = 23; // telnet port
 // Used to communicate between the Mega and the ESP device
 HardwareSerial & espSerial = Serial3;
 
-Led bluLed(ledPin46);
-Led redLed(ledPin48);
+Led bluLed(ledPin12);
+Led redLed(ledPin11);
 
 void setup()
 {
