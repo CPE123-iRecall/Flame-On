@@ -7,35 +7,35 @@
 #include "CPE123_EspAPI_Fall17.h"
 
 // Pins - also assumes using Serial1 to talk with ESP board
-const int espResetPin = 7;
-const int boardLedPin = 42;
-const int connectedLedPin = 40;
-const int tcpLedPin = 38;
+//const int espResetPin = 7;
+//const int boardLedPin = 42;
+//const int connectedLedPin = 40;
+//const int tcpLedPin = 38;
 
 
 
 const int Rec = 9;
-const int Play = 8;
+const int Play = 5;
 
 const int ledPin44 = 44;
 
 
-const int ledPin12 = 12;
-const int ledPin11 = 11;
+const int ledPin12 = 42;
+const int ledPin11 = 40;
 
 // ESP8266 Leds
-Led boardLed(boardLedPin);
-Led connectedLed(connectedLedPin);
-Led tcpLed(tcpLedPin);
+//Led boardLed(boardLedPin);
+//Led connectedLed(connectedLedPin);
+//Led tcpLed(tcpLedPin);
 
-// WiFi and TCP information 
-const char ssid[] = "FlameOn";
-const char wifPassword[] = "fourwordsalluppercase";
-const char tcpHost[] = "192.168.88.200";
-const unsigned int tcpPort = 23; // telnet port
+//// WiFi and TCP information 
+//const char ssid[] = "FlameOn";
+//const char wifPassword[] = "fourwordsalluppercase";
+//const char tcpHost[] = "192.168.88.200";
+//const unsigned int tcpPort = 23; // telnet port
 
 // Used to communicate between the Mega and the ESP device
-HardwareSerial & espSerial = Serial3;
+//HardwareSerial & espSerial = Serial3;
 
 Led bluLed(ledPin12);
 Led redLed(ledPin11);
@@ -43,11 +43,12 @@ Led redLed(ledPin11);
 void setup()
 {
   Serial.begin(9600);
+  Serial3.begin(9600);
   setupMessage(__FILE__, "Esp AP mode with Telnet server - Mega code");
   delay(500);
   
   // setup esp wifi as station and connect to a telnet server
-  setupEsp_wifiStation_telnetClient();
+  //setupEsp_wifiStation_telnetClient();
 
   pinMode(Rec, OUTPUT);
   pinMode(Play, OUTPUT);
@@ -60,6 +61,8 @@ void setup()
 void loop()
 {
   alarmControl();
+  //playAlert(false);
+  //getValue();
 }
 
 void alarmControl()
@@ -67,7 +70,7 @@ void alarmControl()
   Serial.setTimeout(10);
   int shouldChangeState = 0;
   enum {WAITING, ALARMING};
-  static int state = ALARMING;
+  static int state = WAITING;
 
   shouldChangeState = getValue();
 
@@ -76,6 +79,7 @@ void alarmControl()
     case WAITING:
       if (shouldChangeState > 0)
       {
+        Serial.println("foo");
         state = ALARMING;
       }
     break;
@@ -103,11 +107,11 @@ int getValue()
 {
   Serial.setTimeout(10);
   int value = 0;
-  if (espSerial.available() > 0)
+  if (Serial3.available() > 0)
   {
-    value = espSerial.parseInt();
+    value = Serial3.parseInt();
+    //Serial.println(value);
   }
-
   return value;
 }
 
@@ -194,27 +198,27 @@ void blinkLeds(bool shouldBlink)
   }
 }
 
-void setupEsp_wifiStation_telnetClient()
-{
-  // connects to the wifi network and then connects to the telnet server
-  
-  espSerial.begin(9600);
-  
-  setupEspLeds(boardLed, connectedLed, tcpLed, espResetPin);
-  espBoardReset("Rebooting ESP board via reset pin"); 
-    
-  // Output ESP Firmware version (helps us verify the boards is working)
-  reportEspFirmwareVersion();
-    
-  // Turn off Access Point mode on the ESP board (just incase it was turned on)
-  wifiApModeOff();
-  
-  // Connect to WiFi
-  // Note - The Esp hardware automatically tries to reconnect when it boots
-  setupAndReportWifi(ssid, wifPassword);
-  
-  // Connect to the TCP server (if port = 23 then telnet)
-  tcpClientSetupAndReport(tcpHost, tcpPort);
-
-
-}
+//void setupEsp_wifiStation_telnetClient()
+//{
+//  // connects to the wifi network and then connects to the telnet server
+//  
+//  espSerial.begin(9600);
+//  
+//  setupEspLeds(boardLed, connectedLed, tcpLed, espResetPin);
+//  espBoardReset("Rebooting ESP board via reset pin"); 
+//    
+//  // Output ESP Firmware version (helps us verify the boards is working)
+//  reportEspFirmwareVersion();
+//    
+//  // Turn off Access Point mode on the ESP board (just incase it was turned on)
+//  wifiApModeOff();
+//  
+//  // Connect to WiFi
+//  // Note - The Esp hardware automatically tries to reconnect when it boots
+//  setupAndReportWifi(ssid, wifPassword);
+//  
+//  // Connect to the TCP server (if port = 23 then telnet)
+//  tcpClientSetupAndReport(tcpHost, tcpPort);
+//
+//
+//}
